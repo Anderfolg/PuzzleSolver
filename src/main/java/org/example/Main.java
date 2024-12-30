@@ -6,37 +6,20 @@ import java.io.IOException;
 import java.util.*;
 
 public class Main {
-    public static void main(String[] args) {
-        /*List<String> fragments = Arrays.asList("942517", "605676", "498291", "668826", "357057", "478151", "315629", "007148", "252887", "421662",
-                "284505", "467650", "115330", "648206", "207562", "612298", "576885", "294200", "847595", "021597",
-                "074878", "801997", "585401", "168510", "385293", "151863", "022142", "340350", "976151", "337989",
-                "863284", "488310", "303887", "939173", "331413", "905657", "833617", "170794", "094486", "551394",
-                "943693", "147970", "400196", "537505", "367493", "117178", "675840", "868721", "519081", "735564",
-                "401733", "915348", "169233", "324651", "958675", "368753", "861460", "401341", "343222", "794373",
-                "816374", "535119", "188234", "577779", "097792", "729303", "782637", "148159", "830641", "716890",
-                "397853", "871196", "277603", "749226", "839595", "131852", "409432", "810698", "456030", "529185",
-                "758823", "265024", "051041", "699031", "737269", "139340", "730977", "249786", "039931", "055669",
-                "100107", "653178", "279773", "336550", "332847", "685485", "423269", "193536", "890062", "377637",
-                "595777", "412134", "322736", "546929", "616370", "767332", "781184", "920944", "851005", "258850",
-                "064083", "051202", "427711", "359855", "540928", "314284", "085261", "880969", "649699", "064881",
-                "705423", "646927", "252556", "272007", "217511", "620286", "229724", "108865", "124636", "231417",
-                "961201", "658432", "775416", "246027", "854036", "687762", "389097", "013153", "417085", "919198",
-                "988711", "488665");
-        String longest = findLongestSequence(fragments);
-        System.out.println("Longest sequence: " + longest);*/
+    public static void main( String[] args ) {
         List<String> fragments1 = readFragmentsFromFile("src/main/resources/source.txt");
         String longest = findLongestSequence(fragments1);
         System.out.println("Longest sequence1: " + longest);
 
     }
 
-    public static List<String> readFragmentsFromFile(String fileName) {
+    public static List<String> readFragmentsFromFile( String fileName ) {
         List<String> fragments = new ArrayList<>();
         try (BufferedReader br = new BufferedReader(new FileReader(fileName))) {
             String line;
             while ((line = br.readLine()) != null) {
                 line = line.trim();
-                if (!line.isEmpty() && line.matches("\\d+")) { // Ensure the line contains only digits
+                if ( !line.isEmpty() && line.matches("\\d+") ) { // Ensure the line contains only digits
                     fragments.add(line);
                 }
             }
@@ -45,14 +28,23 @@ public class Main {
         }
         return fragments;
     }
-    public static String findLongestSequence(List<String> fragments) {
+
+    /**findLongestSequence(List<String> fragments): Основний метод,
+     *  який приймає список фрагментів та повертає найдовшу можливу послідовність.
+
+     Створює два Trie: prefixTrie для префіксів та suffixTrie для суфіксів.
+     Заповнює Trie префіксами та суфіксами фрагментів.
+     Ітерується по всіх фрагментах, запускаючи для кожного рекурсивний пошук findSequence.
+     Зберігає найдовшу знайдену послідовність.
+     */
+    public static String findLongestSequence( List<String> fragments ) {
         int n = fragments.size();
         Trie prefixTrie = new Trie();
         Trie suffixTrie = new Trie();
 
         for (int i = 0; i < n; i++) {
             String fragment = fragments.get(i);
-            if (fragment.length() >= 2) {
+            if ( fragment.length() >= 2 ) {
                 prefixTrie.insert(fragment.substring(0, 2), i);
                 suffixTrie.insert(fragment.substring(fragment.length() - 2), i);
             }
@@ -64,16 +56,29 @@ public class Main {
             String currentSequence = fragments.get(start);
             used.clear();
             used.add(start);
-            String sequence = findSequence(fragments, prefixTrie, suffixTrie, currentSequence, used);
-            if (sequence.length() > longestSequence.length()) {
+            String sequence = findSequence(fragments, prefixTrie, currentSequence, used);
+            if ( sequence.length() > longestSequence.length() ) {
                 longestSequence = sequence;
             }
         }
         return longestSequence;
     }
 
-    private static String findSequence(List<String> fragments, Trie prefixTrie, Trie suffixTrie, String currentSequence, Set<Integer> used) {
-        if (currentSequence.length() < 2) return currentSequence;
+    /**findSequence(List<String> fragments, Trie prefixTrie, String currentSequence, Set<Integer> used):
+     *Рекурсивний метод для пошуку послідовності.
+
+     currentSequence: Поточна побудована послідовність.
+     used: Множина індексів вже використаних фрагментів.
+     Знаходить останні дві цифри currentSequence.
+     Шукає в prefixTrie всі фрагменти, які починаються з цих двох цифр.
+     Для кожного знайденого фрагмента, якщо він ще не використаний:
+     Додає індекс фрагмента до used.
+     Рекурсивно викликає findSequence з новою послідовністю.
+     Видаляє індекс фрагмента з used (backtracking).
+     Повертає найдовшу знайдену послідовність.
+     */
+    private static String findSequence( List<String> fragments, Trie prefixTrie, String currentSequence, Set<Integer> used ) {
+        if ( currentSequence.length() < 2 ) return currentSequence;
 
         String lastTwo = currentSequence.substring(currentSequence.length() - 2);
         List<Integer> nextIndices = prefixTrie.find(lastTwo);
@@ -81,14 +86,14 @@ public class Main {
         String longest = currentSequence;
 
         for (int nextIndex : nextIndices) {
-            if (!used.contains(nextIndex)) {
+            if ( !used.contains(nextIndex) ) {
                 used.add(nextIndex);
                 String nextFragment = fragments.get(nextIndex);
 
                 String newSequence = currentSequence.substring(0, currentSequence.length() - 2) + nextFragment;
 
-                String seq = findSequence(fragments, prefixTrie, suffixTrie, newSequence, used);
-                if (seq.length() > longest.length()) {
+                String seq = findSequence(fragments, prefixTrie, newSequence, used);
+                if ( seq.length() > longest.length() ) {
                     longest = seq;
                 }
                 used.remove(nextIndex);
@@ -98,15 +103,32 @@ public class Main {
         return longest;
     }
 }
+
+/**
+ * TrieNode містить два поля:
+ * children: Це відображення (HashMap),
+ * де ключем є префікс (або суфікс) рядка, а значенням — наступний вузол Trie.
+ * Воно представляє зв'язки між вузлами в дереві.
+ * indices: Це список індексів фрагментів, які закінчуються на даний префікс (або суфікс).
+ * Він потрібен для відстеження, які фрагменти вже використані в послідовності.
+ */
 class TrieNode {
     Map<String, TrieNode> children = new HashMap<>();
     List<Integer> indices = new ArrayList<>(); // Зберігаємо індекси фрагментів
 }
 
+/**
+ * Trie містить поле:
+ * root: Кореневий вузол дерева Trie.
+ * insert(String s, int index): Метод для вставки рядка s (префікса або суфікса) в Trie. index — це індекс фрагмента у вхідному списку. Він проходить по символах рядка s, створюючи нові вузли, якщо їх немає, і зберігає індекс фрагмента в останньому вузлі.
+ * find(String prefix): Метод для пошуку всіх індексів фрагментів,
+ * які починаються з заданого prefix. Він проходить по дереву Trie,
+ * і якщо знаходить відповідний префікс, повертає список індексів.
+ */
 class Trie {
     TrieNode root = new TrieNode();
 
-    public void insert(String s, int index) {
+    public void insert( String s, int index ) {
         TrieNode current = root;
         for (int i = 0; i < s.length(); i++) {
             String prefix = s.substring(0, i + 1);
@@ -116,11 +138,11 @@ class Trie {
         current.indices.add(index);
     }
 
-    public List<Integer> find(String prefix) {
+    public List<Integer> find( String prefix ) {
         TrieNode current = root;
         for (int i = 0; i < prefix.length(); i++) {
             String sub = prefix.substring(0, i + 1);
-            if (!current.children.containsKey(sub)) {
+            if ( !current.children.containsKey(sub) ) {
                 return new ArrayList<>();
             }
             current = current.children.get(sub);
